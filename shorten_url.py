@@ -15,15 +15,22 @@ REDIS_PORT = 6379
 REPLICAS_SIZE = 10  # Number of Replicas
 MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
 REDIRECT_COUNTS_KEY = "shorturl:resolved"
+HLL_KEY = "hyperloglog:original:url"
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add a hyperloglog based counter  of original urls
+#  TODO: add that ConsistentHashRing setup to enable redis cluster
+
 class UrlShortener(object):
     def __init__(self):
         self.redis = redis.Redis(host=REDIS_IP, port=REDIS_PORT)
 
     def shorten_url(self, url):
-        self.short_url = long(md5.md5(url).hexdigest(), 16)
-        self.redis.setex(self.short_url, url, MIN_EXP_TIME)
+        url_exists = self.redis.pfadd(HLL_KEY_NAME, url)
+        if not url_exists:
+            self.short_url = long(md5.md5(url).hexdigest(), 16)
+            self.redis.setex(self.short_url, url, MIN_EXP_TIME)
+        else:
+            self.short_url = self.redis.get(short_url)
 
     def retrieve_orig_url(self, short_url):
         return self.redis.get(short_url)
