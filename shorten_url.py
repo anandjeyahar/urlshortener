@@ -16,18 +16,39 @@ REPLICAS_SIZE = 10  # Number of Replicas
 MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
 REDIRECT_COUNTS_KEY = "shorturl:resolved"
 HLL_KEY = "hyperloglog:original:url"
+
 #  TODO: try using zmq  based ioloop instead might be more useful
-#  TODO: add a hyperloglog based counter  of original urls
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
+#  TODO: Read up on hashing algorithms and pick best suited one for url
+#  shortening service. see
+#  TODO: Sanitize the incoming url, for malicious js.
 
 class UrlShortener(object):
+    URL_ALLOWED_CHARS = [
+                    ]
+    # From RFC 1738 allowed url chars
+    # LOWALPHA       = "a", "b","c", "d" , "e" , "f" , "g" , "h" ,
+    #                  "i" , "j" , "k" , "l" , "m" , "n" , "o" , "p" ,
+    #                  "q" , "r" , "s" , "t" , "u" , "v" , "w" , "x" ,
+    #                  "y" , "z"
+    # HIALPHA        = "A" , "B" , "C" , "D" , "E" , "F" , "G" , "H" ,
+    #                  "I" , "J" , "K" , "L" , "M" , "N" , "O" , "P" ,
+    #                  "Q" , "R" , "S" , "T" , "U" , "V" , "W" , "X" ,
+    #                  "Y" , "Z"
+    # DIGIT          = "0" , "1" , "2" , "3" , "4" , "5" , "6" , "7" ,
+    #                  "8" , "9"
+    # SAFE           = "$" , "-" , "_" , "." , "+"
+    # EXTRA          = "!" , "*" , "'" , "(" , ")" , ","
+    # NATIONAL       = "{" , "}" , "," , "\" , "^" , "~" , "[" , "]" , "`"
+    # PUNCTUATION    = "<" , ">" , "#" , "%" , <">
+    # RESERVED       = ";" , "/" , "?" , ":" , "@" , "&" , "="
     def __init__(self):
         self.redis = redis.Redis(host=REDIS_IP, port=REDIS_PORT)
 
     def shorten_url(self, url):
         url_exists = self.redis.pfadd(HLL_KEY, url)
         if not url_exists:
-            self.short_url = long(md5.md5(url).hexdigest(), 16)
+            self.short_url = long(md5.md5(url).hexdigest(), 36)
             self.redis.setex(self.short_url, url, MIN_EXP_TIME)
         else:
             self.short_url = self.redis.get(url)
