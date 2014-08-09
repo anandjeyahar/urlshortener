@@ -25,12 +25,12 @@ class UrlShortener(object):
         self.redis = redis.Redis(host=REDIS_IP, port=REDIS_PORT)
 
     def shorten_url(self, url):
-        url_exists = self.redis.pfadd(HLL_KEY_NAME, url)
+        url_exists = self.redis.pfadd(HLL_KEY, url)
         if not url_exists:
             self.short_url = long(md5.md5(url).hexdigest(), 16)
             self.redis.setex(self.short_url, url, MIN_EXP_TIME)
         else:
-            self.short_url = self.redis.get(short_url)
+            self.short_url = self.redis.get(url)
 
     def retrieve_orig_url(self, short_url):
         return self.redis.get(short_url)
