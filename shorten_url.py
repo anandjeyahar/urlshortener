@@ -55,6 +55,7 @@ class UrlShortener(object):
             self.short_url = "".join([random.choice(URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(self.short_url):
                 self.redis.setex(self.short_url, url, MIN_EXP_TIME)
+                self.redis.setex(url, self.short_url, MIN_EXP_TIME)
             else:
                 self.shorten_url(url)
         else:
@@ -77,8 +78,11 @@ class ShortUrlHandler(RequestHandler):
 class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
-        url_shortener.shorten_url(orig_url)
-        self.finish(json.dumps({'url': url_shortener.short_url}))
+        short_url = self.redis.get(orig_url)
+        if not short_url:
+            url_shortener.shorten_url(orig_url)
+            short_url = url_shortener.short_url
+        self.finish(json.dumps({'url': short_url}))
 
 class Application(Application):
     #  """ 
