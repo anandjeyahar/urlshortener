@@ -66,11 +66,15 @@ class UrlShortener(object):
 
 class ShortUrlHandler(RequestHandler):
     def get(self):
+        self.render("index.html")
+
+    def post(self):
         short_url = self.get_argument('short_url')
         orig_url = url_shortener.retrieve_orig_url(short_url)
         url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
         self.redirect(orig_url)
 
+class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         url_shortener.shorten_url(orig_url)
@@ -85,7 +89,8 @@ class Application(Application):
     #  """ 
     def __init__(self):
         handlers = [
-                (r'/shorten', ShortUrlHandler)
+                (r'/', ShortUrlHandler),
+                (r'/shorten', ShortenUrlHandler)
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
