@@ -1,7 +1,7 @@
 import json
+import logging
 import redis
-import bisect
-import md5
+import random
 import tornado
 from tornado.options import define, options
 from tornado.web import RequestHandler, Application
@@ -52,7 +52,7 @@ class UrlShortener(object):
     def shorten_url(self, url):
         url_exists = self.redis.pfadd(HLL_KEY, url)
         if not url_exists:
-            self.short_url = "".join([random.choice(URL_ALLOWED_CHARS) for i in range(5)])
+            self.short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(self.short_url):
                 self.redis.setex(self.short_url, url, MIN_EXP_TIME)
                 self.redis.setex(url, self.short_url, MIN_EXP_TIME)
@@ -71,6 +71,7 @@ class ShortUrlHandler(RequestHandler):
 
     def post(self):
         short_url = self.get_argument('short_url')
+        logging.info("# Received short url: %s"%short_url)
         orig_url = url_shortener.retrieve_orig_url(short_url)
         url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
         self.redirect(orig_url)
@@ -78,8 +79,9 @@ class ShortUrlHandler(RequestHandler):
 class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
-        short_url = self.redis.get(orig_url)
-        if not short_url:
+        logging.info("# Received Original url: %s"%orig_url)
+        short_url = url_shortener.redis.get(orig_url)
+        if short_url == "null" or not short_url:
             url_shortener.shorten_url(orig_url)
             short_url = url_shortener.short_url
         self.finish(json.dumps({'url': short_url}))
