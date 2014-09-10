@@ -1,0 +1,17 @@
+
+<head>
+    <script type="javascript" >
+        text_objs = document.getElementsByTagName("text");
+        for (var i=0; i < text_objs.length; ++i) {
+            text_objs[i].change(function() {//search and replace urls with a  shortened url});
+        });
+
+    </script>
+<form action="/shorten" method="post" >
+    <label for="orig_url"> URL to shorten </label>
+    <input type=url label="url to shorten" id="orig_url" name="orig_url">
+    <button type="submit">Shorten this url for me</button>
+    </input>
+</form>
+</head>
+
