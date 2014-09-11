@@ -1,10 +1,15 @@
 
 <head>
     <script type="javascript" >
-        text_objs = document.getElementsByTagName("text");
+        document.onreadystatechange = function() {
+        var text_objs = document.getElementsByTagName("INPUT");
         for (var i=0; i < text_objs.length; ++i) {
-            text_objs[i].change(function() {//search and replace urls with a  shortened url});
-        });
+            if (text_objs[i].type == "text"){
+                setInterval(function() {ObserveInputValue(text_objs[i].val())); //search and replace urls with a  shortened url});
+            }
+        }
+   }
+}
 
     </script>
 <form action="/shorten" method="post" >
