@@ -44,7 +44,7 @@ class UrlShortener(object):
                         DIGIT +\
                         SAFE +\
                         EXTRA +\
-                        PUNCTUATION 
+                        PUNCTUATION
 
     def __init__(self):
         self.redis = redis.Redis(host=REDIS_IP, port=REDIS_PORT)
@@ -67,7 +67,7 @@ class UrlShortener(object):
 
 class ShortUrlHandler(RequestHandler):
     def get(self):
-        self.render("index.html")
+        self.render(tornado.web.StaticFileHandler("index.html", {'path':'./static'}))
 
     def post(self):
         short_url = self.get_argument('short_url')
@@ -87,14 +87,15 @@ class ShortenUrlHandler(RequestHandler):
         self.finish(json.dumps({'url': short_url}))
 
 class Application(Application):
-    #  """ 
+    #  """
     #  >>> import requests
     #  >>> requests.post("/shorten", params={"orig_url":"http://google.com"})
     #  >>> resp = requests.get("/shorten", params={"short_url": "265477614567132497141480353139365708304L"})
     #  >>> assert resp.url=="http://google.com"
-    #  """ 
+    #  """
     def __init__(self):
         handlers = [
+                (r'index.html', tornado.web.StaticFileHandler, {'path':'./static/index.html'}),
                 (r'/', ShortUrlHandler),
                 (r'/shorten', ShortenUrlHandler)
                 ]
@@ -102,7 +103,8 @@ class Application(Application):
             autoescape=None,  # tornado 2.1 backward compatibility
             debug=options.debug,
             gzip=True,
-        )
+            )
+        settings.update({'static_path':'./static'})
         tornado.web.Application.__init__(self, handlers, **settings)
 
 def main():
