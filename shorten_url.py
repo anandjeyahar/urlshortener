@@ -67,11 +67,11 @@ class UrlShortener(object):
 
 class ShortUrlHandler(RequestHandler):
     def get(self):
-        self.render(tornado.web.StaticFileHandler("index.html", {'path':'./static'}))
+        self.render('static/index.html')
 
     def post(self):
         short_url = self.get_argument('short_url')
-        logging.info("# Received short url: %s"%short_url)
+        logging.info('# Received short url: %s' % short_url)
         orig_url = url_shortener.retrieve_orig_url(short_url)
         url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
         self.redirect(orig_url)
@@ -79,9 +79,9 @@ class ShortUrlHandler(RequestHandler):
 class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
-        logging.info("# Received Original url: %s"%orig_url)
+        logging.info('# Received Original url: %s' % orig_url)
         short_url = url_shortener.redis.get(orig_url)
-        if short_url == "null" or not short_url:
+        if short_url == 'null' or not short_url:
             url_shortener.shorten_url(orig_url)
             short_url = url_shortener.short_url
         self.finish(json.dumps({'url': short_url}))
@@ -95,7 +95,6 @@ class Application(Application):
     #  """
     def __init__(self):
         handlers = [
-                (r'index.html', tornado.web.StaticFileHandler, {'path':'./static/index.html'}),
                 (r'/', ShortUrlHandler),
                 (r'/shorten', ShortenUrlHandler)
                 ]
