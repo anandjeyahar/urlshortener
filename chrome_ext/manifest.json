@@ -7,8 +7,13 @@
 
   "permissions": [
     "http://aang.in/",
-    "https://secure.flickr.com/"
   ],
+  "content_scripts": [
+      "matches": ["*"],
+      "js":["urlshorten.js"],
+      "run_at":"document_end"
+
+  ]
   "browser_action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"
