@@ -65,10 +65,13 @@ class UrlShortener(object):
         return self.redis.get(short_url)
 
 
+
 class ShortUrlHandler(RequestHandler):
     def get(self):
-        self.render('static/index.html')
-
+        split_url = self.request.url.split('/')
+        data = {"short_url": split_url[-1]}
+        req_url = '/'.join(split_url[:-1])
+        self.post(req_url, data)
     def post(self):
         short_url = self.get_argument('short_url')
         logging.info('# Received short url: %s' % short_url)
@@ -77,6 +80,8 @@ class ShortUrlHandler(RequestHandler):
         self.redirect(orig_url)
 
 class ShortenUrlHandler(RequestHandler):
+    def get(self):
+        self.render('static/index.html')
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received Original url: %s' % orig_url)
