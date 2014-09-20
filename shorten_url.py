@@ -67,11 +67,10 @@ class UrlShortener(object):
 
 
 class ShortUrlHandler(RequestHandler):
-    def get(self):
-        split_url = self.request.url.split('/')
-        data = {"short_url": split_url[-1]}
-        req_url = '/'.join(split_url[:-1])
-        self.post(req_url, data)
+    def get(self, *args):
+        data = {"short_url": args}
+        self.request.arguments = data
+        self.post()
     def post(self):
         short_url = self.get_argument('short_url')
         logging.info('# Received short url: %s' % short_url)
@@ -100,7 +99,7 @@ class Application(Application):
     #  """
     def __init__(self):
         handlers = [
-                (r'/', ShortUrlHandler),
+                (r'/(.*)', ShortUrlHandler),
                 (r'/shorten', ShortenUrlHandler)
                 ]
         settings = dict(
