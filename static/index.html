@@ -1,17 +1,5 @@
 
 <head>
-    <script type="javascript" >
-        document.onreadystatechange = function() {
-        var text_objs = document.getElementsByTagName("INPUT");
-        for (var i=0; i < text_objs.length; ++i) {
-            if (text_objs[i].type == "text"){
-                setInterval(function() {ObserveInputValue(text_objs[i].val())); //search and replace urls with a  shortened url});
-                }
-            }
-        }
-    }
-
-    </script>
     <form action="/shorten" method="post" >
         <label for="orig_url"> URL to shorten </label>
         <input type=url label="url to shorten" id="orig_url" name="orig_url">
