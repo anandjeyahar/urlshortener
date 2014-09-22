@@ -50,16 +50,20 @@ class UrlShortener(object):
         self.redis = redis.Redis(host=REDIS_IP, port=REDIS_PORT)
 
     def shorten_url(self, url):
-        url_exists = self.redis.pfadd(HLL_KEY, url)
-        if not url_exists:
-            self.short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
-            if not self.redis.get(self.short_url):
-                self.redis.setex(self.short_url, url, MIN_EXP_TIME)
-                self.redis.setex(url, self.short_url, MIN_EXP_TIME)
+        url_not_exists = self.redis.pfadd(HLL_KEY, url)
+        if url_not_exists:
+            short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
+            if not self.redis.get(short_url):
+                self.redis.setex(short_url, url, MIN_EXP_TIME)
+                self.redis.setex(url, short_url, MIN_EXP_TIME)
             else:
+                # Since collisions are possible, this means there was a
+                # collision
+                logging.warn("#urlshortener: Collision Orig Url: %s, generated short url: %s" %(url, short_url))
                 self.shorten_url(url)
         else:
-            self.short_url = self.redis.get(url)
+            short_url = self.redis.get(url)
+        return short_url
 
     def retrieve_orig_url(self, short_url):
         return self.redis.get(short_url)
@@ -68,9 +72,14 @@ class UrlShortener(object):
 
 class ShortUrlHandler(RequestHandler):
     def get(self, *args):
-        data = {"short_url": args}
-        self.request.arguments = data
-        self.post()
+        logging.info(args)
+        if args:
+            data = {"short_url": args}
+            self.request.arguments = data
+            self.post()
+        else:
+            self.render('static/index.html')
+
     def post(self):
         short_url = self.get_argument('short_url')
         logging.info('# Received short url: %s' % short_url)
@@ -84,10 +93,8 @@ class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received Original url: %s' % orig_url)
-        short_url = url_shortener.redis.get(orig_url)
-        if short_url == 'null' or not short_url:
-            url_shortener.shorten_url(orig_url)
-            short_url = url_shortener.short_url
+        short_url = url_shortener.shorten_url(orig_url)
+        #TODO: add domain name before short_url
         self.finish(json.dumps({'url': short_url}))
 
 class Application(Application):
@@ -99,8 +106,8 @@ class Application(Application):
     #  """
     def __init__(self):
         handlers = [
-                (r'/(.*)', ShortUrlHandler),
-                (r'/shorten', ShortenUrlHandler)
+                (r'/shorten', ShortenUrlHandler),
+                (r'/(?!shorten|.*^)', ShortUrlHandler),
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
