@@ -66,20 +66,21 @@ class UrlShortener(object):
         return str(short_url)
 
     def retrieve_orig_url(self, short_url):
-        return self.redis.get(short_url)
+        return str(self.redis.get(short_url))
 
 class ShortUrlHandler(RequestHandler):
-    def get(self, *args):
+    def get(self, args):
         logging.info(args)
         if args:
             data = {"short_url": args}
-            self.request.arguments = data
+            assert url_shortener.redis.get(args)
+            self.request.query_arguments.update(data)
             self.post()
         else:
             self.render('static/index.html')
 
     def post(self):
-        short_url = self.get_argument('short_url')
+        short_url = self.request.query_arguments.get('short_url')
         logging.info('# Received short url: %s' % short_url)
         orig_url = url_shortener.retrieve_orig_url(short_url)
         url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
@@ -104,7 +105,7 @@ class Application(Application):
     def __init__(self):
         handlers = [
                 (r'/shorten', ShortenUrlHandler),
-                (r'/(.*^)', ShortUrlHandler),
+                (r'/(.*)', ShortUrlHandler),
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
