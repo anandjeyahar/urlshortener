@@ -7,8 +7,8 @@ from tornado.options import define, options
 from tornado.web import RequestHandler, Application
 
 
-define('debug', default=0, help='hot deployment. use in dev only', type=int)
-define('port', default=8888, help='run on the given port', type=int)
+define('debug', default=1, help='hot deployment. use in dev only', type=int)
+define('port', default=8000, help='run on the given port', type=int)
 
 REDIS_IP = '127.0.0.1'
 REDIS_PORT = 6379
@@ -63,7 +63,7 @@ class UrlShortener(object):
                 self.shorten_url(url)
         else:
             short_url = self.redis.get(url)
-        return short_url
+        return str(short_url)
 
     def retrieve_orig_url(self, short_url):
         return self.redis.get(short_url)
@@ -93,8 +93,7 @@ class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received Original url: %s' % orig_url)
-        short_url = url_shortener.shorten_url(orig_url)
-        #TODO: add domain name before short_url
+        short_url = '/'.join([self.request.headers.get('Origin'), url_shortener.shorten_url(orig_url)])
         self.finish(json.dumps({'url': short_url}))
 
 class Application(Application):
