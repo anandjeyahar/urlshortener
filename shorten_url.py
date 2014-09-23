@@ -68,8 +68,6 @@ class UrlShortener(object):
     def retrieve_orig_url(self, short_url):
         return self.redis.get(short_url)
 
-
-
 class ShortUrlHandler(RequestHandler):
     def get(self, *args):
         logging.info(args)
@@ -106,7 +104,7 @@ class Application(Application):
     def __init__(self):
         handlers = [
                 (r'/shorten', ShortenUrlHandler),
-                (r'/(?!shorten|.*^)', ShortUrlHandler),
+                (r'/(.*^)', ShortUrlHandler),
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
