@@ -16,6 +16,7 @@ REPLICAS_SIZE = 10  # Number of Replicas
 MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
 REDIRECT_COUNTS_KEY = 'shorturl:resolved'
 HLL_ORIG_URL_KEY = 'hyperloglog:original:url'
+HLL_SHORT_URL_KEY = 'hyperloglog:short:url'
 
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
@@ -51,7 +52,6 @@ class UrlShortener(object):
 
     def shorten_url(self, url):
         orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
-        short_url_not_exists = self.redis.pfadd(HLL_SHORT_URL_KEY, url)
         if orig_url_not_exists and short_url_not_exists:
             short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(short_url):
@@ -63,11 +63,13 @@ class UrlShortener(object):
                 logging.warn("#urlshortener: Collision Orig Url: %s, generated short url: %s" %(url, short_url))
                 self.shorten_url(url)
         elif not orig_url_not_exists:
+            # Original url already shortenede, just return th
+            short_url_not_exists = self.redis.pfadd(HLL_SHORT_URL_KEY, url)
             short_url = self.redis.get(url)
-        elif not short_url_not_exists:
+        else:
             logging.warn("#urlshortener: short_url provided as input for shortening")
             short_url  = "Piss off, don't play"
-
+        assert short_url
         return str(short_url)
 
     def retrieve_orig_url(self, short_url):
