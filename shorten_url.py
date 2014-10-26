@@ -3,6 +3,7 @@ import logging
 import redis
 import random
 import tornado
+import urllib
 from tornado.options import define, options
 from tornado.web import RequestHandler, Application
 
@@ -53,7 +54,7 @@ class UrlShortener(object):
     def shorten_url(self, url):
         orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
         short_url_not_exists = self.redis.pfadd(HLL_SHORT_URL_KEY, url)
-        if orig_url_not_exists: # and short_url_not_exists:
+        if orig_url_not_exists and short_url_not_exists:
             short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(short_url):
                 self.redis.setex(short_url, url, MIN_EXP_TIME)
@@ -64,7 +65,7 @@ class UrlShortener(object):
                 # collision
                 logging.warn("#urlshortener: Collision Orig Url: %s, generated short url: %s" %(url, short_url))
                 self.shorten_url(url)
-        elif not orig_url_not_exists:
+        elif not short_url_not_exists and orig_url_not_exists:
             # Original url already shortenede, just return th
             short_url = self.redis.get(url)
         else:
