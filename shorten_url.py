@@ -92,7 +92,7 @@ class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received Original url: %s' % orig_url)
-        short_url = '/'.join([self.request.headers.get('Origin'), url_shortener.shorten_url(orig_url)])
+        short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'), url_shortener.shorten_url(orig_url)]) + '></a>'
         self.finish(json.dumps({'url': short_url}))
 
 class Application(Application):
