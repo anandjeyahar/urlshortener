@@ -52,11 +52,13 @@ class UrlShortener(object):
 
     def shorten_url(self, url):
         orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
-        if orig_url_not_exists and short_url_not_exists:
+        short_url_not_exists = self.redis.pfadd(HLL_SHORT_URL_KEY, url)
+        if orig_url_not_exists: # and short_url_not_exists:
             short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(short_url):
                 self.redis.setex(short_url, url, MIN_EXP_TIME)
                 self.redis.setex(url, short_url, MIN_EXP_TIME)
+                self.redis.pfadd(HLL_SHORT_URL_KEY, short_url)
             else:
                 # Since collisions are possible, this means there was a
                 # collision
@@ -64,7 +66,6 @@ class UrlShortener(object):
                 self.shorten_url(url)
         elif not orig_url_not_exists:
             # Original url already shortenede, just return th
-            short_url_not_exists = self.redis.pfadd(HLL_SHORT_URL_KEY, url)
             short_url = self.redis.get(url)
         else:
             logging.warn("#urlshortener: short_url provided as input for shortening")
