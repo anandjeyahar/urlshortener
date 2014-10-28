@@ -90,7 +90,6 @@ class ShortUrlHandler(RequestHandler):
     def get(self, args):
         logging.info(args)
         if args:
-            print args
             data = {"short_url": args}
             assert url_shortener.redis.get(args)
             self.request.query_arguments.update(data)
@@ -111,18 +110,16 @@ class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received Original url: %s' % orig_url)
-
-        import pdb; pdb.set_trace()
         short_url = url_shortener.shorten_url(orig_url)
         if short_url:
             linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'), 'url', short_url]) + '>Click Here</a>'
-            self.finish(json.dumps({'url': linkified_short_url}))
+            self.finish(json.dumps({'url': linkified_short_url}, ensure_ascii=True))
         else:
             self.redirect("/url/")
 
 class StatsHandler(RequestHandler):
     def get(self):
-        self.finish(json.dumps(url_shortener.get_stats()))
+        self.finish(json.dumps(url_shortener.get_stats(), ensure_ascii=True))
 
 class Application(Application):
     #  """

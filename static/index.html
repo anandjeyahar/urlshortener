@@ -1,11 +1,26 @@
-
 <head>
 <meta name="google-site-verification" content="8FHyn_C58Vv6WmuCrfI_LhKWr_2FMBFAVxDdgodjm1I" />
-    <form action="/url/shorten" method="post" >
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <form action="/url/shorten" method="post" id="shorten">
         <label for="orig_url"> URL to shorten </label>
         <input type=url label="url to shorten" id="orig_url" name="orig_url">
         <button type="submit">Shorten</button>
         </input>
     </form>
+    <pre>
+    <b>Stats:</b>
+    Urls Shortened:
+    Redirect Counts:
+    </pre>
+    <script>
+        $(document).ready(function() {
+            var stats = $.parseJSON($.ajax({
+                type: "GET",
+                url: "/url/stats",
+                }).responseText);
+            console.log(stats);
+            });
+
+    </script>
 </head>
 
