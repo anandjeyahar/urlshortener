@@ -19,6 +19,23 @@ REDIRECT_COUNTS_KEY = 'url:shorturl:resolved'
 HLL_ORIG_URL_KEY = 'url:hyperloglog:original'
 SET_SHORT_URL_KEY = 'url:short:set'
 
+def jsonify(obj, **kwargs):
+    assert isinstance(obj, dict), "Only dictionaries please"
+    new_obj = dict()
+    for k,v in obj.items():
+        if isinstance(k,str):
+            nk = k.encode('ascii')
+        else:
+            nk = k
+        print(type(nk))
+        if isinstance(v,str):
+            nv = v.encode('ascii')
+        else:
+            nv = v
+        new_obj[nk] = nv
+    return new_obj
+    #return json.dump(new_obj, **kwargs)
+
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
 #  TODO: Read up on hashing algorithms and pick best suited one for url
@@ -52,8 +69,10 @@ class UrlShortener(object):
         self.redis = redis.Redis(host=REDIS_IP, port=REDIS_PORT)
 
     def get_stats(self):
-        stats = {"urls":self.redis.pfcount(HLL_ORIG_URL_KEY),
-                 "redirects": self.redis.get(REDIRECT_COUNTS_KEY)
+        urls_count = self.redis.pfcount(HLL_ORIG_URL_KEY) if self.redis.pfcount(HLL_ORIG_URL_KEY) else 0
+        redirects = self.redis.get(REDIRECT_COUNTS_KEY) if self.redis.get(REDIRECT_COUNTS_KEY) else 0
+        stats = {r'urls':urls_count,
+                 r'redirects':redirects
                  }
         return stats
 
@@ -87,7 +106,7 @@ class UrlShortener(object):
         return str(self.redis.get(short_url))
 
 class ShortUrlHandler(RequestHandler):
-    def get(self, args):
+    def get(self, args=None):
         logging.info(args)
         if args:
             data = {"short_url": args}
@@ -113,13 +132,13 @@ class ShortenUrlHandler(RequestHandler):
         short_url = url_shortener.shorten_url(orig_url)
         if short_url:
             linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'), 'url', short_url]) + '>Click Here</a>'
-            self.finish(json.dumps({'url': linkified_short_url}, ensure_ascii=True))
+            self.finish(json.dumps({'url': linkified_short_url}, ensure_ascii=False).encode('utf-8'))
         else:
             self.redirect("/url/")
 
 class StatsHandler(RequestHandler):
     def get(self):
-        self.finish(json.dumps(url_shortener.get_stats(), ensure_ascii=True))
+        self.finish(json.dumps(url_shortener.get_stats(), ensure_ascii=False).encode('utf-8'))
 
 class Application(Application):
     #  """
@@ -132,7 +151,7 @@ class Application(Application):
         handlers = [
                 (r'/url/shorten', ShortenUrlHandler),
                 (r'/url/stats',StatsHandler),
-                (r'/url/(.*)', ShortUrlHandler),
+                (r'/url/(?!stats).*', ShortUrlHandler),
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
