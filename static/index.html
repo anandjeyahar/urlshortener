@@ -11,9 +11,9 @@
     <form method="get" id="stats">
     <b>Stats:</b>
     <label for = "urls"> Urls Shortened:</label>
-    <input type=text label="Urls Shortened:" id="urls" name="urls" >
+    <input type=text label="Urls Shortened:" id="urls" name="urls" readOnly>
     <label for = "redirects"> Redirect Counts:</label>
-    <input type=text label="Redirect Counts:" id="redirects" name="redirects" value= "" >
+    <input type=text label="Redirect Counts:" id="redirects" name="redirects" readOnly >
     </form>
     <script>
         $(document).ready(function() {
@@ -22,9 +22,9 @@
             xmlHttp.open( "GET", "/url/stats", false );
             xmlHttp.send( null );
             var stats = $.parseJSON(xmlHttp.responseText);
-            $('#urls').value=stats.urls.toString();
+            $('#urls').val(stats.urls.toString());
             $('#urls').readOnly = true;
-            $('#redirects').value=stats.redirects.toString();
+            $('#redirects').val(stats.redirects.toString());
             $('#redirects').readOnly = true;
             });
 
