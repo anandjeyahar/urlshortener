@@ -113,8 +113,8 @@ class Application(Application):
     #  """
     def __init__(self):
         handlers = [
-                (r'/shorten', ShortenUrlHandler),
-                (r'/(.*)', ShortUrlHandler),
+                (r'/url/shorten', ShortenUrlHandler),
+                (r'/url/(.*)', ShortUrlHandler),
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
