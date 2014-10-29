@@ -101,7 +101,7 @@ class ShortUrlHandler(RequestHandler):
             url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
             self.redirect(orig_url)
         else:
-            self.render('static/index.html')
+            self.redirect('/url/shorten')
 
 class ShortenUrlHandler(RequestHandler):
     def get(self):
@@ -111,7 +111,7 @@ class ShortenUrlHandler(RequestHandler):
         logging.info('# Received Original url: %s' % orig_url)
         short_url = url_shortener.shorten_url(orig_url)
         if short_url:
-            linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'), 'url', short_url]) + '>Click Here</a>'
+            linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'), 'url', urllib.urlencode(short_url)]) + '>Click Here</a>'
             self.finish(json.dumps({'url': linkified_short_url}, ensure_ascii=False).encode('utf-8'))
 
 class StatsHandler(RequestHandler):
