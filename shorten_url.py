@@ -15,16 +15,19 @@ REDIS_IP = '127.0.0.1'
 REDIS_PORT = 6379
 REPLICAS_SIZE = 10  # Number of Replicas
 MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
+
 REDIRECT_COUNTS_KEY = 'url:shorturl:resolved'
 HLL_ORIG_URL_KEY = 'url:hyperloglog:original'
 
+DOMAIN_REGEX = '[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*'
 
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
 #  TODO: Read up on hashing algorithms and pick best suited one for url
 #  shortening service. see
-#  TODO: Sanitize the incoming url, for malicious js.
-
+def validate_safe_url(url):
+    #  TODO: Sanitize the incoming url, for malicious js.
+    return  True
 class UrlShortener(object):
     # From RFC 1738 allowed url chars
     LOWALPHA       = [ 'a', 'b','c', 'd' , 'e' , 'f' , 'g' , 'h' ,
@@ -60,13 +63,12 @@ class UrlShortener(object):
         return stats
 
     def shorten_url(self, url):
-        orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
+        safe_url = validate_safe_url(url)
         # Check if the given url is a shortened url. stop malicious programs from inducing a redirect loop
-        short_url_exists = self.redis.get(url)
-
-        if short_url_exists:
+        if not safe_url:
             logging.warn("#urlshortener: short_url provided as input for shortening")
             return None
+        orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
         if orig_url_not_exists:
             short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(short_url):
@@ -86,22 +88,20 @@ class UrlShortener(object):
         return str(self.redis.get(short_url))
 
 class ShortUrlHandler(RequestHandler):
-    def get(self, args=None):
-        logging.info(args)
-        if args:
-            data = {"short_url": args}
-            assert url_shortener.redis.get(args)
-            self.request.query_arguments.update(data)
-            self.post()
-        else:
-            self.render('static/index.html')
+    def get(self):
+        self.post()
 
     def post(self):
-        short_url = self.request.query_arguments.get('short_url')
-        logging.info('# Received short url: %s' % short_url)
-        orig_url = url_shortener.retrieve_orig_url(short_url)
-        url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
-        self.redirect(orig_url)
+        assert self.request.uri.startswith('/url')
+        url_parts = self.request.uri.split('/')
+        short_url = url_parts[2] if (url_parts) > 2 else None
+        if short_url:
+            logging.info('# Received short url: %s' % short_url)
+            orig_url = url_shortener.retrieve_orig_url(short_url)
+            url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
+            self.redirect(orig_url)
+        else:
+            self.render('static/index.html')
 
 class ShortenUrlHandler(RequestHandler):
     def get(self):
@@ -113,8 +113,6 @@ class ShortenUrlHandler(RequestHandler):
         if short_url:
             linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'), 'url', short_url]) + '>Click Here</a>'
             self.finish(json.dumps({'url': linkified_short_url}, ensure_ascii=False).encode('utf-8'))
-        else:
-            self.redirect("/url/")
 
 class StatsHandler(RequestHandler):
     def get(self):
@@ -131,7 +129,7 @@ class Application(Application):
         handlers = [
                 (r'/url/shorten', ShortenUrlHandler),
                 (r'/url/stats',StatsHandler),
-                (r'/url/(?!stats).*', ShortUrlHandler),
+                (r'/url/(?!stats|shorten).*', ShortUrlHandler),
                 ]
         settings = dict(
             autoescape=None,  # tornado 2.1 backward compatibility
