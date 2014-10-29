@@ -17,24 +17,7 @@ REPLICAS_SIZE = 10  # Number of Replicas
 MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
 REDIRECT_COUNTS_KEY = 'url:shorturl:resolved'
 HLL_ORIG_URL_KEY = 'url:hyperloglog:original'
-SET_SHORT_URL_KEY = 'url:short:set'
 
-def jsonify(obj, **kwargs):
-    assert isinstance(obj, dict), "Only dictionaries please"
-    new_obj = dict()
-    for k,v in obj.items():
-        if isinstance(k,str):
-            nk = k.encode('ascii')
-        else:
-            nk = k
-        print(type(nk))
-        if isinstance(v,str):
-            nv = v.encode('ascii')
-        else:
-            nv = v
-        new_obj[nk] = nv
-    return new_obj
-    #return json.dump(new_obj, **kwargs)
 
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
@@ -79,19 +62,16 @@ class UrlShortener(object):
     def shorten_url(self, url):
         orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
         # Check if the given url is a shortened url. stop malicious programs from inducing a redirect loop
-        short_url_not_exists = self.redis.sadd(SET_SHORT_URL_KEY, url)
+        short_url_not_exists = self.redis.get(short_url)
 
         if not short_url_not_exists:
             logging.warn("#urlshortener: short_url provided as input for shortening")
             return None
-        # If execution reaches here input is not a shortened url, remove it from storage.
-        self.redis.srem(SET_SHORT_URL_KEY, url)
         if orig_url_not_exists:
             short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
             if not self.redis.get(short_url):
                 self.redis.setex(short_url, url, MIN_EXP_TIME)
                 self.redis.setex(url, short_url, MIN_EXP_TIME)
-                self.redis.sadd(SET_SHORT_URL_KEY, short_url)
             else:
                 # Since collisions are possible, this means there was a
                 # collision
