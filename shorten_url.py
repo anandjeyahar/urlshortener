@@ -62,9 +62,9 @@ class UrlShortener(object):
     def shorten_url(self, url):
         orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
         # Check if the given url is a shortened url. stop malicious programs from inducing a redirect loop
-        short_url_not_exists = self.redis.get(short_url)
+        short_url_exists = self.redis.get(url)
 
-        if not short_url_not_exists:
+        if short_url_exists:
             logging.warn("#urlshortener: short_url provided as input for shortening")
             return None
         if orig_url_not_exists:
