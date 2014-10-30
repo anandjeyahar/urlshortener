@@ -15,7 +15,7 @@ define('port', default=8000, help='run on the given port', type=int)
 sys.path.append("/home/anand/Downloads/devbox_configs/")
 import backend
 
-MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
+MIN_EXP_TIME = 30 * 24 * 60 * 60     # Expire after 30 days
 
 REDIRECT_COUNTS_KEY = 'url:shorturl:resolved'
 HLL_ORIG_URL_KEY = 'url:hyperloglog:original'
