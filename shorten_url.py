@@ -7,7 +7,6 @@ import urllib
 from tornado.options import define, options
 from tornado.web import RequestHandler, Application
 
-
 define('debug', default=1, help='hot deployment. use in dev only', type=int)
 define('port', default=8000, help='run on the given port', type=int)
 
@@ -95,7 +94,7 @@ class ShortUrlHandler(RequestHandler):
     def post(self):
         assert self.request.uri.startswith('/url')
         url_parts = self.request.uri.split('/')
-        short_url = url_parts[2] if (url_parts) > 2 else None
+        short_url = urllib.unquote_plus(url_parts[2]) if (url_parts) > 2 else None
         if short_url:
             logging.info('# Received short url: %s' % short_url)
             orig_url = url_shortener.retrieve_orig_url(short_url)
