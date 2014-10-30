@@ -52,7 +52,7 @@ class UrlShortener(object):
                         PUNCTUATION
 
     def __init__(self):
-        self.redis = backend.redisConn
+        self.redis = backend.redisLabsConn
 
     def get_stats(self):
         urls_count = self.redis.pfcount(HLL_ORIG_URL_KEY) if self.redis.pfcount(HLL_ORIG_URL_KEY) else 0
