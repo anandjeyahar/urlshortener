@@ -11,9 +11,9 @@ from tornado.web import RequestHandler, Application
 define('debug', default=1, help='hot deployment. use in dev only', type=int)
 define('port', default=8000, help='run on the given port', type=int)
 
-# Custom redislabs account settings
+# Custom backend account settings
 sys.path.append("/home/anand/Downloads/devbox_configs/")
-import redislabs
+import backend
 
 MIN_EXP_TIME = 24 * 60 * 60     # Expire after 1 day
 
@@ -53,7 +53,7 @@ class UrlShortener(object):
                         PUNCTUATION
 
     def __init__(self):
-        self.redis = redislabs.redisConn
+        self.redis = backend.redisConn
 
     def get_stats(self):
         urls_count = self.redis.pfcount(HLL_ORIG_URL_KEY) if self.redis.pfcount(HLL_ORIG_URL_KEY) else 0
