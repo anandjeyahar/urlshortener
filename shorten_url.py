@@ -51,7 +51,7 @@ class UrlShortener(object):
                         PUNCTUATION
 
     def __init__(self):
-        self.redis = backend.redisLabsConn
+        self.redis = backend.redisConn
 
     def get_stats(self):
         urls_count = self.redis.pfcount(HLL_ORIG_URL_KEY) if self.redis.pfcount(HLL_ORIG_URL_KEY) else 0
