@@ -9,7 +9,6 @@ from tornado.web import RequestHandler, Application
 
 define('debug', default=1, help='hot deployment. use in dev only', type=int)
 define('port', default=8000, help='run on the given port', type=int)
-define('log_file', default='urlshortener.log',help='file to print logs to',type=str)
 
 # Custom backend account settings
 import backend
