@@ -1,1 +1,1 @@
-web: python shorten_url.py --log-file -
+web: gunicorn shorten_url.py --log-file -
