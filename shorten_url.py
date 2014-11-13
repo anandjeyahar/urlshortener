@@ -11,6 +11,7 @@ define('debug', default=1, help='hot deployment. use in dev only', type=int)
 define('port', default=8000, help='run on the given port', type=int)
 
 # Custom backend account settings
+sys.path.append("/home/anand/Downloads/devbox_configs/")
 import backend
 
 MIN_EXP_TIME = 30 * 24 * 60 * 60     # Expire after 30 days
