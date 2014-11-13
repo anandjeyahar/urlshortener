@@ -1,1 +1,1 @@
-web: python shorten_url.py --log-file -
+web: python shorten_url.py
