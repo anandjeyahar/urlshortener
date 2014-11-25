@@ -92,16 +92,15 @@ class ShortUrlHandler(RequestHandler):
         self.post()
 
     def post(self):
-        assert self.request.uri.startswith('/url')
         url_parts = self.request.uri.split('/')
-        short_url = urllib.unquote_plus(url_parts[2]) if (url_parts) > 2 else None
+        short_url = urllib.unquote_plus(url_parts[1]) if (url_parts) > 1 else None
         if short_url:
             logging.info('# Received short url: %s' % short_url)
             orig_url = url_shortener.retrieve_orig_url(short_url)
             url_shortener.redis.incrby(REDIRECT_COUNTS_KEY, 1)
             self.redirect(orig_url)
         else:
-            self.redirect('/url/shorten')
+            self.redirect('/shorten')
 
 class ShortenUrlHandler(RequestHandler):
     def get(self):
