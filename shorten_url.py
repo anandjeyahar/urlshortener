@@ -86,7 +86,7 @@ class UrlShortener(object):
                 self.shorten_url(url)
         else:
             # Original url already shortenede, just return th
-            short_url = self.redis.get(SHORT_URL_KEY + url)
+            short_url = self.redis.get(ORIG_URL_KEY + url)
         return short_url
 
     def retrieve_orig_url(self, short_url):
@@ -114,6 +114,7 @@ class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received url: %s' % orig_url)
+        import pdb; pdb.set_trace()
         short_url = url_shortener.shorten_url(orig_url)
         if short_url:
             linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'),
