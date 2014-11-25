@@ -20,6 +20,8 @@ REDIRECT_COUNTS_KEY = 'url:shorturl:resolved'
 HLL_ORIG_URL_KEY = 'url:hyperloglog:original'
 
 DOMAIN_REGEX = '[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*'
+SHORT_URL_KEY = 'short:url:'
+ORIG_URL_KEY = 'orig:url:'
 
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
@@ -27,6 +29,9 @@ DOMAIN_REGEX = '[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*'
 #  shortening service. see
 def validate_safe_url(url):
     #  TODO: Sanitize the incoming url, for malicious js.
+    # Check if it's already a shortened url
+    if backend.redisLabsConn.get(SHORT_URL_KEY + url):
+        return False
     return  True
 class UrlShortener(object):
     # From RFC 1738 allowed url chars
@@ -71,9 +76,9 @@ class UrlShortener(object):
         orig_url_not_exists = self.redis.pfadd(HLL_ORIG_URL_KEY, url)
         if orig_url_not_exists:
             short_url = "".join([random.choice(self.URL_ALLOWED_CHARS) for i in range(5)])
-            if not self.redis.get(short_url):
-                self.redis.setex(short_url, url, MIN_EXP_TIME)
-                self.redis.setex(url, short_url, MIN_EXP_TIME)
+            if not self.redis.get(SHORT_URL_KEY + short_url):
+                self.redis.setex(SHORT_URL_KEY + short_url, url, MIN_EXP_TIME)
+                self.redis.setex(ORIG_URL_KEY + url, short_url, MIN_EXP_TIME)
             else:
                 # Since collisions are possible, this means there was a
                 # collision
@@ -81,11 +86,11 @@ class UrlShortener(object):
                 self.shorten_url(url)
         else:
             # Original url already shortenede, just return th
-            short_url = self.redis.get(url)
+            short_url = self.redis.get(SHORT_URL_KEY + url)
         return short_url
 
     def retrieve_orig_url(self, short_url):
-        return str(self.redis.get(short_url))
+        return str(self.redis.get(SHORT_URL_KEY + short_url))
 
 class ShortUrlHandler(RequestHandler):
     def get(self):
@@ -93,7 +98,7 @@ class ShortUrlHandler(RequestHandler):
 
     def post(self):
         url_parts = self.request.uri.split('/')
-        short_url = urllib.unquote_plus(url_parts[1]) if (url_parts) > 1 else None
+        short_url = urllib.unquote_plus(url_parts[1]) if len(url_parts) > 1 else None
         if short_url:
             logging.info('# Received short url: %s' % short_url)
             orig_url = url_shortener.retrieve_orig_url(short_url)
@@ -108,11 +113,10 @@ class ShortenUrlHandler(RequestHandler):
         self.render('static/index.html')
     def post(self):
         orig_url = self.get_argument('orig_url')
-        logging.info('# Received Original url: %s' % orig_url)
+        logging.info('# Received url: %s' % orig_url)
         short_url = url_shortener.shorten_url(orig_url)
         if short_url:
             linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'),
-                                                         'url',
                                                          urllib.quote_plus(short_url)]) + '>Click Here</a>'
             self.finish(json.dumps({'url': linkified_short_url}, ensure_ascii=False).encode('utf-8'))
 
