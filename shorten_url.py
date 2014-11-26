@@ -118,7 +118,6 @@ class ShortenUrlHandler(RequestHandler):
     def post(self):
         orig_url = self.get_argument('orig_url')
         logging.info('# Received url: %s' % orig_url)
-        import pdb; pdb.set_trace()
         short_url = url_shortener.shorten_url(orig_url)
         if short_url:
             linkified_short_url = '<a href=' + '/'.join([self.request.headers.get('Origin'),
