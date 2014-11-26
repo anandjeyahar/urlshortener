@@ -10,10 +10,6 @@ from tornado.web import RequestHandler, Application
 define('debug', default=1, help='hot deployment. use in dev only', type=int)
 define('port', default=8000, help='run on the given port', type=int)
 
-# Custom backend account settings
-sys.path.append("/home/anand/Downloads/devbox_configs/")
-import backend
-
 MIN_EXP_TIME = 30 * 24 * 60 * 60     # Expire after 30 days
 
 REDIRECT_COUNTS_KEY = 'url:shorturl:resolved'
@@ -23,6 +19,11 @@ DOMAIN_REGEX = '[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*'
 SHORT_URL_KEY = 'short:url:'
 ORIG_URL_KEY = 'orig:url:'
 
+redistogo_url = os.getenv('REDISTOGOURL')
+if redis_url:
+    #redis_url = redistogo_url.split('redis://redistogo:')[1]
+    #redis_url = redis_url.split('/')[0]
+    redisToGoConn = redis.from_url(redis_url)
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
 #  TODO: Read up on hashing algorithms and pick best suited one for url
@@ -30,7 +31,7 @@ ORIG_URL_KEY = 'orig:url:'
 def validate_safe_url(url):
     #  TODO: Sanitize the incoming url, for malicious js.
     # Check if it's already a shortened url
-    if backend.redisLabsConn.get(SHORT_URL_KEY + url):
+    if redisToGoConn.get(SHORT_URL_KEY + url):
         return False
     return  True
 class UrlShortener(object):
@@ -57,7 +58,7 @@ class UrlShortener(object):
                         PUNCTUATION
 
     def __init__(self):
-        self.redis = backend.redisLabsConn
+        self.redis = redisToGoConn
 
     def get_stats(self):
         urls_count = self.redis.pfcount(HLL_ORIG_URL_KEY) if self.redis.pfcount(HLL_ORIG_URL_KEY) else 0
