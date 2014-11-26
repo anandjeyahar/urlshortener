@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import redis
 import sys
 import tornado
 import urllib
@@ -21,7 +22,7 @@ SHORT_URL_KEY = 'short:url:'
 ORIG_URL_KEY = 'orig:url:'
 
 redistogo_url = os.getenv('REDISTOGOURL')
-if redis_url:
+if redistogo_url:
     #redis_url = redistogo_url.split('redis://redistogo:')[1]
     #redis_url = redis_url.split('/')[0]
     redisToGoConn = redis.from_url(redistogo_url)
