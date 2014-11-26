@@ -22,10 +22,11 @@ SHORT_URL_KEY = 'short:url:'
 ORIG_URL_KEY = 'orig:url:'
 
 redistogo_url = os.getenv('REDISTOGOURL')
-if redistogo_url:
-    #redis_url = redistogo_url.split('redis://redistogo:')[1]
-    #redis_url = redis_url.split('/')[0]
-    redisToGoConn = redis.from_url(redistogo_url)
+print os.getenv('REDISTOGOURL')
+assert redistogo_url, 'No redis To Go URL set'
+
+redisToGoConn = redis.from_url(redistogo_url)
+
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
 #  TODO: Read up on hashing algorithms and pick best suited one for url
