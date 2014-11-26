@@ -21,8 +21,7 @@ DOMAIN_REGEX = '[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*'
 SHORT_URL_KEY = 'short:url:'
 ORIG_URL_KEY = 'orig:url:'
 
-redistogo_url = os.getenv('REDISTOGOURL')
-print os.getenv('REDISTOGOURL')
+redistogo_url = os.getenv('REDISTOGO_URL')
 assert redistogo_url, 'No redis To Go URL set'
 
 redisToGoConn = redis.from_url(redistogo_url)
