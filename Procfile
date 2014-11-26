@@ -1,1 +1,1 @@
-web: python shorten_url.py --port=80
+web: sudo python shorten_url.py --port=80
