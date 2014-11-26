@@ -152,7 +152,7 @@ class Application(Application):
 def main():
     tornado.options.parse_command_line()
     app = Application()
-    app.listen(options.port, xheaders=True)
+    app.listen(address='0.0.0.0', port=options.port, xheaders=True)
     loop = tornado.ioloop.IOLoop.instance()
     loop.start()
 
