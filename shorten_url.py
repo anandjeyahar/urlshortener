@@ -23,7 +23,7 @@ redistogo_url = os.getenv('REDISTOGOURL')
 if redis_url:
     #redis_url = redistogo_url.split('redis://redistogo:')[1]
     #redis_url = redis_url.split('/')[0]
-    redisToGoConn = redis.from_url(redis_url)
+    redisToGoConn = redis.from_url(redistogo_url)
 #  TODO: try using zmq  based ioloop instead might be more useful
 #  TODO: add that ConsistentHashRing setup to enable redis cluster
 #  TODO: Read up on hashing algorithms and pick best suited one for url
