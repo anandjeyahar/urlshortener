@@ -152,9 +152,9 @@ class Application(Application):
 def main():
     tornado.options.parse_command_line()
     app = Application()
-    app.listen(address='0.0.0.0', port=options.port, xheaders=True)
-    loop = tornado.ioloop.IOLoop.instance()
-    loop.start()
+    httpServer = tornado.httpserver.HTTPServer(app)
+    httpServer.listen(address='0.0.0.0', port=options.port, xheaders=True)
+    tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':
     url_shortener = UrlShortener()
