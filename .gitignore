@@ -34,6 +34,8 @@ htmlcov/
 nosetests.xml
 coverage.xml
 
+# for java and android classes
+*.class
 # Translations
 *.mo
 
@@ -52,3 +54,22 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+
+# Scala specific stuff
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
