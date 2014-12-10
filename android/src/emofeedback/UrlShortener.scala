@@ -7,17 +7,11 @@ import scala.concurrent.future
 class UrlShortener extends SActivity {
 
   onCreate {
-    contentView = new SVerticalLayout {
-      style {
-        case b: SButton => b.textColor(Color.RED).onClick(toast("Bang!"))
-        case t: STextView => t textSize 10.dip
-        case e: SEditText => e.backgroundColor(Color.YELLOW)
-      }
+    contentView = new SWebView {
       val myWebView = new SWebView()
-      myWebView.loadUrl("http://aang.in")
+      val mimeType: String = "text/html"
+      myWebView.loadUrl("file:///android_res/html/index.html")
       this += myWebView
-	  this += new SLinearLayout {
-	  }.wrap
-    } padding 20.dip
+    }
   }
 }
