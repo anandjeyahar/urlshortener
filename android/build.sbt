@@ -2,7 +2,7 @@ import android.Keys._
 
 android.Plugin.androidBuild
 
-name := "url-shortener"
+name := "UrlShortener"
 
 scalaVersion := "2.11.4"
 

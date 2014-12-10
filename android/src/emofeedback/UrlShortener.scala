@@ -1,10 +1,10 @@
-package urlshortener
+package com.emofeedback
 
 import org.scaloid.common._
 import android.graphics.Color
 import scala.concurrent.future
 
-class HelloScaloid extends SActivity {
+class UrlShortener extends SActivity {
 
   onCreate {
     contentView = new SVerticalLayout {
