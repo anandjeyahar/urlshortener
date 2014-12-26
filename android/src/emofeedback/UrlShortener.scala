@@ -10,7 +10,7 @@ class UrlShortener extends SActivity {
     contentView = new SWebView {
       val myWebView = new SWebView()
       val mimeType: String = "text/html"
-      myWebView.loadUrl("file:///android_res/html/index.html")
+      myWebView.loadUrl("http://www.aang.in")
       this += myWebView
     }
   }
